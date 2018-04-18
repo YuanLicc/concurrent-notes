@@ -50,25 +50,25 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
 这里指的变化指的是结构的变化，也就是当锁标志位变化时，Mark Word内记录的信息可能就没有分代年龄、HashCode了，
 下面是32位虚拟机Mark Word结构的变化：
 <table align="center" width="100%">
-   <tr>
+   <tr width="100%">
       <td rowspan="2">锁状态</td>
       <td colspan="2">25bit</td>
       <td rowspan="2">4bit</td>
       <td>1bit</td>
       <td>2bit</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td >23bit</td>
       <td>2bit</td>
       <td>是否为偏向锁</td>
       <td>锁标志位</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>轻量级锁</td>
       <td colspan="4">指向栈中锁记录的指针</td>
       <td>00</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>重量级锁</td>
       <td colspan="4">指向互斥量(重量级锁)的指针</td>
       <td>10</td>
@@ -78,7 +78,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
       <td colspan="4">空</td>
       <td>11</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>偏向锁</td>
       <td>线程ID</td>
       <td>Epoch</td>
@@ -86,7 +86,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
       <td>1</td>
       <td>01</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>无锁状态</td>
       <td colspan="2">对象HashCode</td>
       <td>对象分代年龄</td>
@@ -96,7 +96,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
 </table>
 下面是64位虚拟机Mark Word结构的变化：
 <table width="100%">
-   <tr>
+   <tr width="100%">
       <td rowspan="2">锁状态</td>
       <td>25bit</td>
       <td>31bit</td>
@@ -105,7 +105,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
       <td>1bit</td>
       <td>2bit</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td></td>
       <td></td>
       <td>cms_free</td>
@@ -113,7 +113,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
       <td>偏向锁</td>
       <td>锁标志位</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>无锁</td>
       <td>空</td>
       <td>hashCode</td>
@@ -122,7 +122,7 @@ synchronized实现同步的基础：Java中的每一个对象都可以作为锁�
       <td>0</td>
       <td>01</td>
    </tr>
-   <tr>
+   <tr width="100%">
       <td>偏向锁</td>
       <td colspan="2">ThreadID(54bit) Epoch(2bit)</td>
       <td></td>
@@ -165,25 +165,25 @@ Java SE 1.6中为了减少获得锁释放锁带来的性能消耗，引入了偏
 会唤醒这些线程，被唤醒的线程就会进行新一轮的夺锁之争。
 - 锁优缺点对比
 <table width="100%">
-    <tr>
+    <tr width="100%">
       <td>锁</td>
       <td>优点</td>
       <td>缺点</td>
       <td>适用场景</td>
    </tr>
-   <tr>
+   <tr width="100%">
      <td>偏向锁</td>
      <td>加锁和解锁不需要额外的消耗，和执行非同步方法相比仅存在纳秒级的差距</td>
      <td>如果线程存在锁竞争，会带来额外的锁撤销消耗</td>
      <td>适用于只有一个线程访问同步块的场景</td>
    </tr>
-   <tr>
+   <tr width="100%">
      <td>轻量级锁</td>
      <td>竞争的线程不会阻塞，提高了程序的响应速度</td>
      <td>如果始终得不到锁竞争的线程，使用自旋会消耗CPU</td>
      <td>追求响应时间；同步块执行速度非常快</td>
    </tr>
-   <tr>
+   <tr width="100%">
         <td>重量级锁</td>
         <td>线程竞争不适用自旋，不会消耗CPU</td>
         <td>线程阻塞，响应时间缓慢</td>
