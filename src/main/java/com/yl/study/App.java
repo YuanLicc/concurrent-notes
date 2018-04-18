@@ -11,7 +11,7 @@ public class App
         Integer a = 0;
         System.out.println( "Hello World!" );
         synchronized (a){
-
+            AtomicInteger atomicInteger = new AtomicInteger(1);
         }
     }
 }
