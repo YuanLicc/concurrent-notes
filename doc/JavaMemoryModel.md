@@ -339,7 +339,7 @@ Java的CAS
 AQS及非阻塞数据结构可原子变量类，这些concurrent
 包中的基础类都是使用这种方式实现的，concurrent包实现示意图如下：
 
-[Alt](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/images/concurrent.png)
+[Alt concurrent包实现示意图](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/images/concurrent.png)
 
 #### final域的内存语义
 
