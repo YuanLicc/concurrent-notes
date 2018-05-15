@@ -1,4 +1,4 @@
-## Concurrent-notes
+## Concurrent-notes [![Build Status](https://travis-ci.org/YuanLicc/concurrent-notes.svg?branch=master)](https://travis-ci.org/YuanLicc/concurrent-notes)  [![codecov.io](https://codecov.io/gh/YuanLicc/concurrent-notes/branch/master/graphs/badge.svg?branch=master)](https://codecov.io/gh/YuanLicc/concurrent-notes?branch=master)
 Java并发的笔记。
 是对书籍 [《Java并发编程的艺术》](https://www.amazon.cn/dp/B012NDCEA0/ref=sr_1_1?s=books&ie=UTF8&qid=1523863156&sr=1-1&keywords=java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%9A%84%E8%89%BA%E6%9C%AF)
 和网上查询的相关信息的摘录。若作者对并发有一定理解后，会对并发进行通俗的总结。
