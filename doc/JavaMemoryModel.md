@@ -458,6 +458,118 @@ public class UnsafeSingleton {
 假设 A 线程执行代码 `if(instance == null)` 的同时，B 线程执行 `instance = new UnsafeSingleton()`，此时线程 A 可能会看到 instance 引用的对象还没有初始化，会造成实例化多个实例。针对上面的情况，可以对 getInstance() 方法进行同步处理：
 
 ```java
-public 
+public class SafeSingleton {
+    private static SafeSingleton instance;
+    
+    private SafeSingleton() {}
+    
+    public synchronized static UnsafeSingleton getInstance() {
+        if(instance == null) {
+            instance = new UnsafeSingleton();
+        }
+        return instance;
+    }
+}
 ```
 
+由于 getInstance() 方法进行了同步处理，使得单例为线程安全的，但是 synchronized 将导致性能开销，且如果此方法被多个线程频繁的调用，将会导致程序执行性能下降。若此方法不会被多个线程频繁调用，那么这个延迟初始化方案将能提供令人满意的性能。但聪明的人们相处了一个更好的解决办法：双重检查锁定。
+
+```java
+public class SafeSingleton {
+    private static UnsafeSingleton instance;
+    
+    private UnsafeSingleton() {}
+    
+    public static UnsafeSingleton getInstance() {
+        if(instance == null) {
+            sychronized(SafeSingleton.class) {
+                if(instance == null) {
+                    instance = new SafeSingleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+上面的代码中第一次检查后进入的线程将存在锁竞争，竞争后存在一个线程首先得到锁并进入同步代码块，那么为什么需要第二个检查呢，第二个检查避免后续的线程进入后多次初始化。第一次检查避免了不为空时对锁的获取带来的资源消耗，因此可大量降低性能消耗。这种双检查锁定看起来似乎比较完美，但这是一个错误的优化！因为在执行第一次检查时，可能 instance 正在进行初始化而并没有完成初始化，而此时可能引用到了一个为初始化完成的实例。
+
+#### 问题所在
+
+把`instance = new SafeSingleton` 分为三部分 + 额外部分：
+
+1）分配内存空间
+
+2）进行初始化
+
+3）设置instance 指向内存空间
+
+4）初次访问对象
+
+Java 保证重排序不会改变单线程内的程序执行结果，那么意味着 2）3）可能存在重排序，因为 Java 内存模型保证了2）一定会排在4）之前执行，所以2）3）进行重排序根本不影响单线程程序执行结果。若在2）3）进行了重排序，那么当线程执行到3）时，若存在线程 B 执行到第一个检查，此时发现 instance 并不为 null，将返回一个还没有执行2）初始化的对象。
+
+#### 基于 volatile 的解决方案
+
+```java
+public class SafeSingleton {
+    private volatile static UnsafeSingleton instance;
+    
+    private UnsafeSingleton() {}
+    
+    public static UnsafeSingleton getInstance() {
+        if(instance == null) {
+            sychronized(SafeSingleton.class) {
+                if(instance == null) {
+                    instance = new SafeSingleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+#### 基于类初始化的解决方案
+
+JVM 在类的初始化阶段（即在Class 被加载后，且被线程使用之前），会执行类的初始化。在执行类的初始化期间，JVM 会去获取一个锁。这个锁可以同步多个线程对一个类的初始化。
+
+```java
+public class SafeSingleton {
+    private static class InstanceHolder {
+        public static SafeSingleton instance = new SafeSingleton();
+    }
+    
+    private UnsafeSingleton() {}
+    
+    public static SafeSingleton getInstance() {
+        return InstanceHolder.instance;
+    }
+}
+```
+
+初始化一个类，包括执行这个类的静态初始化和初始化在这个类中声明的静态字段。根据 Java 语言规范，在首次发生下列任意一种情况时，一个类或接口类型 T 将被立即初始化：
+
+1）T 是一个类，而且一个 T 类型的实例被创建。
+
+2）T 是一个类，且 T 中声明的一个静态方法被调用。
+
+3）T 中声明的一个静态字段被赋值。
+
+4）T 中声明的一个静态字段被使用，而且这个字段不是常量字段。
+
+5）T 是一个顶级类，而且一个断言语句嵌套在 T 内部被执行。
+
+在 `SafeSingleton ` 中，首次执行 getInstance 方法的线程将导致 InstanceHolder 类被初始化（情况4）。由于 Java 语言是多线程的，多个线程可能在同一时间尝试去初始化同一个类或接口（比如这里多个线程可能在同一时刻调用 getInstance() 方法来初始化 InstanceHolder 类）。因此，在 Java 中初始化一个类或者接口时，需要做细致的同步处理。
+
+Java 语言规范规定，对于每一个类或者接口，都有唯一的初始化锁与之对应。JVM 在类初始化期间会获取这个初始化锁。对于类的初始化过程可分为：
+
+1）通过在 Class 对象上同步，即获取 Class 对象的初始化锁来控制类或接口的初始化。这个获取锁的线程会一直等待，直到当前线程能够获取到这个初始化锁。假设Class 对象未被初始化且线程 A 抢先获取到这个锁。
+
+2）线程 A 执行类的初始化，同时线程 B 在初始化锁对应的 condition 上等待。
+
+3）线程 A 设置 state=initialized，然后唤醒在 condition 中等待的所有线程。
+
+4）线程 B  结束类的初始化处理。
+
+注：condition 与 state 是虚构的，Java 语言规范并没有规定这一点。
