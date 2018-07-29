@@ -2,7 +2,6 @@ package com.yl.learn.concurrent;
 
 import com.yl.learn.concurrent.pool.DefaultThreadPool;
 import com.yl.learn.concurrent.pool.ThreadPool;
-import com.yl.learn.concurrent.util.ThreadUtils;
 import junit.framework.TestCase;
 
 public class DefaultThreadPoolTest extends TestCase {
