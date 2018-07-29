@@ -139,3 +139,6 @@ public class User : Serializable {
 1）因为原子更新类都是抽象类，每次使用的时候必须使用静态方法 `newUpdater` 创建一个更新器，并且需要设置想要更新的类和属性。
 
 2）更新类的字段必须使用 `public volatile` 修饰符。 
+
+
+

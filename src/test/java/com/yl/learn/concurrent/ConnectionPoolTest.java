@@ -1,7 +1,6 @@
 package com.yl.learn.concurrent;
 
 import com.yl.learn.concurrent.connect.database.ConnectionPool;
-import com.yl.learn.concurrent.util.ThreadUtils;
 import junit.framework.TestCase;
 
 public class ConnectionPoolTest extends TestCase {
@@ -34,7 +33,7 @@ public class ConnectionPoolTest extends TestCase {
         }
     }
 
-    public void testConnectionPool() {
+    public void testConnectionPool() throws Exception{
 
         ConnectionPool pool = new ConnectionPool(10);
 
@@ -42,7 +41,7 @@ public class ConnectionPoolTest extends TestCase {
             Thread thread = new Thread(new SleepRunnable(pool), i + "");
             thread.start();
         }
-
+        pool.get(-1);
     }
 
 }

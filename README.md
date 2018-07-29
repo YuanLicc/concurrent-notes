@@ -10,5 +10,5 @@ Java并发的笔记。
 - [预备知识点（持续更新）](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/basicKnowledge.md)
 - [Java并发底层实现原理](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentPrinciple.md)
 - [Java内存模型](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaMemoryModel.md)
-- [Java 并发编程基础](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/Java-concurrent-basic.md)
+- [Java 并发编程基础](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentBasic.md)
 

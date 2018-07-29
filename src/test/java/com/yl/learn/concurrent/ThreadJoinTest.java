@@ -14,8 +14,10 @@ public class ThreadJoinTest extends TestCase {
 
         two.start();
 
-        ThreadUtils.sleepSecond(5);
+        ThreadUtils.sleepSecond(1);
 
         System.out.println(Thread.currentThread().getName());
+
+        one.interrupt();
     }
 }
