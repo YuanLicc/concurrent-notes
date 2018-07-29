@@ -3,10 +3,10 @@
   <component name="AutoImportedSourceRoots">
     <option name="directories">
       <list>
-        <option value="D:\angular\IDEASPACE\concurrent-notes/src/main/java" />
-        <option value="D:\angular\IDEASPACE\concurrent-notes/src/main/kotlin" />
-        <option value="D:\angular\IDEASPACE\concurrent-notes/src/test/java" />
-        <option value="D:\angular\IDEASPACE\concurrent-notes/src/test/kotlin" />
+        <option value="D:\Projects\concurrent-notes/src/main/java" />
+        <option value="D:\Projects\concurrent-notes/src/main/kotlin" />
+        <option value="D:\Projects\concurrent-notes/src/test/java" />
+        <option value="D:\Projects\concurrent-notes/src/test/kotlin" />
       </list>
     </option>
   </component>

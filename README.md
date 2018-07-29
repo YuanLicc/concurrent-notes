@@ -11,4 +11,10 @@ Java并发的笔记。
 - [Java并发底层实现原理](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentPrinciple.md)
 - [Java内存模型](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaMemoryModel.md)
 - [Java 并发编程基础](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentBasic.md)
+- [Java 中的锁](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaLock.md)
+- [Java 并发容器及框架](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentFramework.md)
+- [Java 原子操作类](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaAtomic.md)
+- [Java 并发工具类](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaConcurrentToolClass.md)
+- [Java 线程池](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaThreadPool.md)
+- [Java Executor 框架](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/JavaExecutorFramework.md)
 
