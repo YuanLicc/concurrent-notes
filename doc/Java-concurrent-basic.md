@@ -166,7 +166,7 @@ Thread Info: "Time waiting" Id=13 TIMED_WAITING
 
 线程在自身的声明周期中，并不是固定地处于某个状态，而是随着代码的执行在不同的状态之间进行切换，下面是 `Java` 线程状态转变图：
 
-![Alt `Java`线程状态转变图](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/images/thread-stage.svg)
+![Alt Java线程状态转变图](https://github.com/YuanLicc/concurrent-notes/blob/master/doc/images/thread-state.svg)
 
 线程创建后，调用 `start` 方法开始运行。当线程执行 wait 方法之后，线程进入等待状态。进入等待状态的线程需要其它线程的通知才能返回运行态，而超时等待状态相当于在等待状态的基础上增加了超时限制，也就是超时时间到达时将会返回到运行态。当线程调用同步方法时，在没有获取锁的情况下，线程将会进入阻塞状态。线程在执行过 run 方法后将会进入终止状态。
 
@@ -368,10 +368,296 @@ Java 通过内置的等待/ 通知机制能够很好的解决这个矛盾并实�
 
 | 方法名称        | 描述                                                         |
 | --------------- | ------------------------------------------------------------ |
-| notify          | 通知一个再对象上等待的线程，使其从 wait 方法返回，而返回的前提是该线程获取到了对象的锁 |
+| notify          | 通知一个在对象上等待的线程，使其从 wait 方法返回，而返回的前提是该线程获取到了对象的锁 |
 | notifyAll       | 通知所有等待在该对象上的线程                                 |
 | wait            | 调用该方法的线程进入 WAITING 状态，只有等待另外线程的通知或被中断才会返回，调用 wait 方法后，会释放对象的锁 |
 | wait(long)      | 超时等待一段时间，这里的参数时间是毫秒，即等待多少毫秒，如果没有通知就超时返回 |
 | wait(long, int) | 对于超时时间更细粒度的控制，可以达到纳秒                     |
 
-等待/ 通知机制，是指一个线程 A 调用了对象 O 的 wait 方法进入等待状态，而另一个线程 B 调用了对象 O 的 notify 或者 notifyAll 方法，线程 A 收到通知后从对象 O 的 wait 方法返回，进而执行后续操作。
+等待/ 通知机制，是指一个线程 A 调用了对象 O 的 wait 方法进入等待状态，而另一个线程 B 调用了对象 O 的 notify 或者 notifyAll 方法，线程 A 收到通知后从对象 O 的 wait 方法返回，进而执行后续操作。调用 `wait`、`notify`、`notofyAll` 方法时需要注意以下细节：
+
+1）使用 `wait`、`notify`、`notofyAll` 时需要先对调用对象加锁。
+
+2）调用 `wait` 方法后，线程状态由`RUNNING` 变为 `WAITING`，并将当前线程放置到对象的等待队列。
+
+3）`notify` 或 `notifyAll` 方法调用后，等待线程依旧不会从 `wait` 方法返回，需要调用 `notify` 或 `notifyAll` 的线程释放锁之后，等待线程才有机会从 `wait` 返回。
+
+4）`notify` 方法将等待队列中的一个等待线程从等待队列中移到同步队列中，而 `notifyAll` 方法则是将等待队列中所有线程的全部移到同步队列，被移动的线程状态由 `WAITING` 变为 `BLOCKED`。
+
+5）从 `wait` 方法返回的前提是获得了调用对象的锁。
+
+#### 等待/ 通知的经典范式
+
+范式分为两部分，分别针对等待方和通知方，等待方遵循如下原则：
+
+1）获取对象的锁。
+
+2）如果条件不满足，那么调用对象的 `wait` 方法，被通知后仍要检查条件。
+
+3）条件满足则执行对应的逻辑。
+
+```java
+synchronized(lock) {
+    while(condition) {
+        lock.wait();
+    }
+    逻辑处理;
+}
+```
+
+通知方准寻如下原则：
+
+1）获得对象的锁。
+
+2）改变条件。
+
+3）通知所有等待在对象上的线程。
+
+```java
+synchronized(lock) {
+    改变条件;
+    lock.notifyAll();
+}
+```
+
+#### 管道输入/ 输出流
+
+管道输入/ 输出流和普通的文件输入/ 输出流或者网络输入/ 输出和不同之处在于，它主要用于线程之间的数据传输，而传输的媒介是内存。管道输入/ 输出流主要包括了如下 4 中具体实现：
+
+1）PipedOutputStream
+
+2）PipedInputStream
+
+3）PipedReader
+
+4）PipedWriter
+
+前面两种面向字节，后两种面向字符。测试：
+
+```java
+public class PrintRunnable implements Runnable {
+
+    private PipedReader in;
+
+    public PrintRunnable(PipedReader in) {
+        this.in = in;
+    }
+
+    @Override
+    public void run() {
+        int receive = 0;
+        try {
+            while ((receive = in.read()) != -1) {
+                System.out.print(receive);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// 未使用 Junit 书写测试，因为涉及到输入。
+public class PrintStreamTest {
+
+    public static void main(String[] args) throws IOException {
+        PipedWriter out = new PipedWriter();
+        PipedReader in = new PipedReader();
+
+        out.connect(in);
+
+        Thread printThread = new Thread(new PrintRunnable(in), "Print Thread");
+        printThread.start();
+
+        int receive = 0;
+        try {
+            while((receive = System.in.read()) != -1) {
+                out.write(receive);
+            }
+        }
+        finally {
+            out.close();
+        }
+    }
+}
+```
+
+main 线程接收的输入，均通过 `PipedWriter` 写入，而 `printThread` 在另一端通过 `PipedReader` 将内容读出并打印。
+
+对于 `Piped` 类型的流，必须先进行绑定，也就是调用 `connect` 方法，如果没有将输入/ 输出流绑定起来，对于该流的访问将会抛出异常。
+
+#### Thread.join 的使用
+
+如果一个线程 A 执行了 `thread.join` 语句，其含义是：当前线程 A 等待 `thread` 线程终止之后才 `thread.join` 返回。线程 `Thread` 除了提供 `join` 方法之外，还提供了 `join(long millis)` 和 `join(long millis, int nanos)` 两个将被超时特性的方法。这两个超时方法表示：如果线程 `thread` 在给定的超时时间里没有终止，那么将会从该超时方法中返回。
+
+#### ThreadLocal 的使用
+
+线程变量，是一个以 `ThreadLocal` 对象为键、任意对象为值的存储结构。这个结构被附带在线程上，也就是说一个线程可以根据一个 `ThreadLocal` 对象查询到绑定在这个线程上的一个值。
+
+```java
+public class Timer {
+
+    private static final ThreadLocal<Long> TIME = new ThreadLocal<>();
+
+    private Timer(){}
+
+    public static Timer start() {
+        Timer instance = new Timer();
+        instance.TIME.set(System.currentTimeMillis());
+        return instance;
+    }
+
+    public Long end() {
+        return System.currentTimeMillis() - TIME.get();
+    }
+}
+```
+
+### 线程应用实例
+
+#### 等待超时模式
+
+开发人员经常会遇到这样的方法调用场景：调用一个方法时等待一段时间（一般来说是给定一个时间段），如果该方法能够在给定的时间段之内得到结果，那么将结果立刻返回，反之返回默认结果。前面已经介绍了等待/ 通知的经典范式，即加锁、条件循环和处理逻辑，而这种范式无法做到超时等待。若想实现超时等待，只需对经典范式做出非常小的改动：
+
+1）等待持续时间：`REMAINING = T`
+
+2）超时时间：`FUTURE = now + T`
+
+这是仅需 `wait(REMAINING)` 即可，在 `wait(REAMINING)` 返回之后会执行 `REMAINING = FUTURE - now`。如果 `REMAINING` 小于等于 0，表示已经超时，直接退出，否则将继续执行 `wait(REMAINING)`。
+
+```java
+long future = System.currentTimeMills + mills;
+
+long remaining = millis;
+
+while((result == null) && remaining > 0) {
+    wait(remaining);
+    remaining = future - System.currentTimeMillis();
+}
+return result;
+```
+
+可以看出，等待超时模式就是在等待/ 通知范式基础上增加了超时控制，这使得该模式相比原有范式更加灵活，因为即使方法执行时间过长，也不会 “永久” 阻塞调用者，而是会按照调用者的要求 “按时” 返回。
+
+#### 数据库连接池示例
+
+使用等待超时模式构造一个简单的数据库连接池：模拟从连接池获取、使用和释放连接的过程，客户端获取连接的过程被设定为等待超时模式，也就是在 1000 毫秒内如果无法获取到可用连接，将返回给客户端 `null`。
+
+```java
+public class ConnectionPool {
+
+    private LinkedList<Connection> pool = new LinkedList<>();
+
+    public ConnectionPool(int initialSize) {
+        if(initialSize > 0) {
+            pool.addLast(new Connection());
+        }
+    }
+
+    public void release(Connection connection) {
+        if(connection != null) {
+            synchronized (pool) {
+                pool.addLast(connection);
+                pool.notifyAll();
+            }
+        }
+    }
+
+    public Connection get() throws InterruptedException{
+        return get(1000);
+    }
+
+    public Connection get(long millis) throws InterruptedException{
+        synchronized (pool) {
+            if(millis <= 0) {
+                while (pool.isEmpty()) {
+                    pool.wait();
+                }
+                return pool.removeFirst();
+            }
+            else {
+                long future = System.currentTimeMillis() + millis;
+                long remaining = millis;
+
+                while (pool.isEmpty() && remaining > 0) {
+                    pool.wait(remaining);
+                    remaining = future - System.currentTimeMillis();
+                }
+                Connection connection = null;
+
+                if(!pool.isEmpty()) {
+                    connection = pool.removeFirst();
+                }
+                return connection;
+            }
+        }
+    }
+
+    public class Connection {
+    }
+
+}
+```
+
+```java
+public class ConnectionPoolTest extends TestCase {
+
+    static class SleepRunnable implements Runnable {
+
+        private ConnectionPool pool;
+
+        public SleepRunnable(ConnectionPool pool) {
+            this.pool = pool;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Timer timer = Timer.start();
+                ConnectionPool.Connection connection = pool.get(1);
+
+                if(connection != null) {
+                    pool.release(connection);
+                    System.out.println("Thread Name: " + Thread.currentThread().getName() 
+                                       + ", time: " + timer.end());
+                }
+                else {
+                    System.out.println("Thread Name: " + Thread.currentThread().getName() 
+                                       + ", get null");
+                }
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void testConnectionPool() {
+
+        ConnectionPool pool = new ConnectionPool(10);
+
+        for(int i = 0; i < 100; i++) {
+            Thread thread = new Thread(new SleepRunnable(pool), i + "");
+            thread.start();
+        }
+
+    }
+
+}
+```
+
+#### 线程池技术及其实例
+
+服务端程序通常会面对客户端传入的短小（执行时间短，工作内容单一）任务，需要服务器快速处理返回结果。如果服务端每次接受一个任务都创建一个线程来处理任务，但是面对成千上万任务时，创建成千上万的线程不是一个好的选择，无疑增加了系统的负载且消耗系统资源，线程池技术能够很好的解决这个问题，预先创建若干数量的线程，并且不能由用户直接对线程的创建进行控制，重复使用固定或较为固定数目的线程来完成任务的执行。一方面，消除了频繁创建和消亡线程的系统资源开销，另一方面，面对过量任务的提交能够平缓的劣化。
+
+```java
+public interface ThreadPool<T extends Runnable> {
+    void execute(T job);
+    void shutdown();
+    void add(int num);
+    void remove(int num);
+    int getWaitSize();
+}
+```
+
+[实现类](https://github.com/YuanLicc/concurrent-notes/tree/master/src/main/java/com/yl/learn/concurrent/pool/DefaultThreadPool.java)
