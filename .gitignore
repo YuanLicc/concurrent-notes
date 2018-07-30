@@ -6,3 +6,4 @@ build/
 .classpath
 .editorconfig
 .settings/
+*.iml
