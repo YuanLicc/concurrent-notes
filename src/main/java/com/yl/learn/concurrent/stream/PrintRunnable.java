@@ -16,7 +16,14 @@ public class PrintRunnable implements Runnable {
         int receive = 0;
         try {
             while ((receive = in.read()) != -1) {
-                System.out.print(receive);
+                char c = (char)receive;
+                if(c == ' ') {
+                    //
+                }
+                else {
+                    byte[] bytes = String.valueOf(c).getBytes();
+                    System.out.print(new String(bytes, "utf-8"));
+                }
             }
         }
         catch (IOException e) {
