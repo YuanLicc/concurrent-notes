@@ -24,21 +24,36 @@ public abstract class AbstractOwnableSynchronizer implements java.io.Serializabl
 }
 ```
 
-AbstractQueuedSynchronizer 如下：
+### AQS
+
+用于实现依赖于先进先出（FIFO）等待队列的阻塞锁和相关同步器（信号量，事件等）。此类以一个 int 值来表示锁的竞争关系，其子类应该以原子的方式去更新这个值。子类应该定义为非公共的内部类。此类实现了很多方法供其子类使用，如 acquireInterruptibly 等。
+#### 用法
+通过使用  getState, setState，compareAndSetState 这些方法来重写下面这些方法：
+
+- tryAcquire
+- tryRelease
+- tryAcquireShared
+- tryReleaseShared
+- isHeldExclusively
+
+以上的每一个方法都默认抛出 UnsupportedOperationException 异常。这些方法的实现必须保证内部线程安全。独占式同步方式核心如下：
 
 ```java
-// 用于实现依赖于先进先出（FIFO）等待队列的阻塞锁和相关同步器（信号量，事件等）。
-// 此类以一个 int 值来表示锁的竞争关系，其子类应该以原子的方式去更新这个值。
-// 子类应该定义为非公共的内部类。此类实现了很多方法供其子类使用，如 acquireInterruptibly 等。
-// 用法：
-// 通过使用  getState, setState，compareAndSetState 这些方法来重写下面这些方法：
-// 1. tryAcquire
-// 2. tryRelease
-// 3. tryAcquireShared
-// 4. tryReleaseShared
-// 5. isHeldExclusively
-// 以上的每一个方法都默认抛出 UnsupportedOperationException 异常。
-// 这些方法的实现必须保证线程安全
+Acquire:
+    while (!tryAcquire(arg)) {
+        enqueue thread if it is not already queued;
+        // 如果线程未入队进行入队操作。
+        // 可能阻塞当前线程。
+    }
+  
+Release:
+    if (tryRelease(arg))
+        unblock the first queued thread;
+```
+
+
+
+```java
 public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer
     implements java.io.Serializable {
 
